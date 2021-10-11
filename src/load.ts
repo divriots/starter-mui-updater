@@ -2,12 +2,14 @@ import 'core-js/stable';
 import 'regenerator-runtime/runtime';
 import fetch from 'node-fetch';
 import { Doc } from './types';
+import { join } from 'path';
 
-const basePath = 'https://raw.githubusercontent.com/mui-org/material-ui';
+const basePath =
+  'https://raw.githubusercontent.com/mui-org/material-ui/master/docs/src';
 
-const loadDoc = async (path?: string): Promise<string> => {
+export const loadDoc = async (path?: string): Promise<string> => {
   try {
-    const response = await fetch(`${basePath}${path}`);
+    const response = await fetch(join(basePath, path || ''));
     return await response.text();
   } catch (error) {
     console.log('error loading doc for path', {

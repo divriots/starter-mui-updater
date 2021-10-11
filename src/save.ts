@@ -3,6 +3,7 @@ import 'regenerator-runtime/runtime';
 import { promises as fs } from 'fs';
 import { Doc } from './types';
 import path from 'path';
+import { uniq } from 'lodash';
 
 export const basePath = '../starter-mui/';
 
@@ -38,6 +39,12 @@ const saveDoc = async (doc: Doc): Promise<boolean> => {
       doc.dsdDoc || ''
     );
 
+    await Promise.all(
+      (doc.demos || []).map(({ name, content }) =>
+        fs.writeFile(path.join(docPath, `${name}.tsx`), content)
+      )
+    );
+
     return true;
   } catch (error) {
     console.log('error saving doc', doc.dsd, error);
@@ -45,5 +52,34 @@ const saveDoc = async (doc: Doc): Promise<boolean> => {
   }
 };
 
-export const save = async (docsMap: Doc[]): Promise<boolean[]> =>
-  Promise.all(docsMap.map(saveDoc));
+const updateStudioConfig = async (docsMap: Doc[]) => {
+  const studioConfigPath = `${basePath}/studio.config.json`;
+
+  const studioConfig = JSON.parse(
+    (await fs.readFile(studioConfigPath)).toString()
+  );
+
+  const newMenu = studioConfig.packages.menu.map((menuEntry: any) => {
+    if (!Array.isArray(menuEntry)) return menuEntry;
+
+    const [category, items] = menuEntry;
+
+    return category === 'components'
+      ? [category, uniq([...items, ...docsMap.map((doc) => doc.dsd)])]
+      : [category, items];
+  });
+
+  await fs.writeFile(
+    studioConfigPath,
+    JSON.stringify(
+      { packages: { ...studioConfig.packages, menu: newMenu } },
+      null,
+      2
+    )
+  );
+};
+
+export const save = async (docsMap: Doc[]): Promise<boolean[]> => {
+  await updateStudioConfig(docsMap);
+  return Promise.all(docsMap.map(saveDoc));
+};

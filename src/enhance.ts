@@ -2,114 +2,76 @@ import 'core-js/stable';
 import 'regenerator-runtime/runtime';
 import { camelCase, upperFirst } from 'lodash';
 import { Doc } from './types';
+import pth from 'path';
+import { loadDoc } from './load';
 
-const mdxLayoutImport = `
+const mdxImport = `
 import { mdx } from '@mdx-js/react';
+`;
+const mdxLayoutImport = `
 import { MdxLayout } from '~/layout';
 export default MdxLayout;
 `;
 
 const metaRegex = /^---\n(.+?)---/gms;
+const componentsHeaderRegex = /^\{\{"component":(.+?)\}\}/gms;
+const demoPathRegex = /^\{\{"demo": "(.+?)"(.*?)\}\}/gms;
 
-// const codePreviewRegex = /^```html preview\n(.+?)```/gms;
-// const codeSampleRegex = /^```html\n/gms;
-// const componentMetaRegex = /\[component-.+?\]/gim;
-// const scriptRegex = /^<script.*?>(.+?)<\/script>/gms;
-// const shoelaceImportRegex = /import { registerIconLibrary }.*?;/gms;
+const enhanceDoc = async (doc: Doc) => {
+  const noComponentHeader = (doc?.muiDoc || '').replaceAll(
+    componentsHeaderRegex,
+    ''
+  );
+  const noMeta = noComponentHeader.replaceAll(metaRegex, '');
 
-// const iconsScriptDoc = /^<script>(\n\s*?fetch\('\/dist\/assets\/icons\/icons\.json'\).*?)<\/script>/gms;
-// const iconInnerHtml = /^\s*?item.innerHTML = `\n.*?`;/gms;
-// const iconSearchStyleRegex = /^<style>\n\s*?\.icon-search.*?<\/style>/gms;
-// const linksRegex = /\[(.+?)\]\(.+?\)/g;
+  const componentImports: string[] = [];
+  const demoComponents: { name: string; path: string }[] = [];
 
-// const enhanceIconScriptDoc = (doc: string): string =>
-//   doc
-//     .replaceAll(iconsScriptDoc, (_, script) =>
-//       script ? `\`\`\`js script${script}\`\`\`` : ''
-//     )
-//     .replace(
-//       `fetch('/dist/assets/icons/icons.json')`,
-//       `fetch('https://unpkg.com/@shoelace-style/shoelace/dist/assets/icons/icons.json')`
-//     )
-//     .replace(
-//       iconInnerHtml,
-//       `item.innerHTML = \`
-//           <sl-icon src="https://unpkg.com/@shoelace-style/shoelace/dist/assets/icons/\${i.name}.svg" style="font-size: 1.5rem;"></sl-icon>
-//         \`;
-//   `
-//     )
-//     .replace(
-//       iconSearchStyleRegex,
-//       (style) => `\`\`\`html:html\n${style}\n\`\`\``
-//     )
-//     .replace(
-//       `\n\`\`\`html:html
-// <sl-icon src="/assets/images/shoe.svg" style="font-size: 8rem;"></sl-icon>
-// \`\`\`\n`,
-//       ''
-//     );
+  const withDemos = noMeta.replaceAll(demoPathRegex, (_, demoPath) => {
+    const componentName = pth.basename(demoPath, '.js');
+    componentImports.push(`import ${componentName} from './${componentName}';`);
 
-const enhanceDoc = (doc: string = ''): string => {
-  //   const withRenderedExamples = doc
-  //     .replaceAll(componentMetaRegex, '')
-  //     .replaceAll(codeSampleRegex, '```htm\n')
-  //     .replaceAll(codePreviewRegex, (codeBlock, code) => {
-  //       let scriptBlock = '';
-  //       const htmlCode = code.replaceAll(
-  //         scriptRegex,
-  //         (_: string, script: string) => {
-  //           const withImportFromModules = script.replaceAll(
-  //             shoelaceImportRegex,
-  //             ''
-  //           );
-  //           scriptBlock = scriptBlock.concat(withImportFromModules);
-  //           return '';
-  //         }
-  //       );
-  //       return `
-  // ${
-  //   htmlCode.trim()
-  //     ? `\`\`\`html:html
-  // ${htmlCode}\`\`\``
-  //     : ''
-  // }
-  // ${
-  //   scriptBlock.trim()
-  //     ? `\`\`\`js script
-  // window.addEventListener('load', () => {${scriptBlock}});
-  // \`\`\``
-  //     : ''
-  // }
-  // #### Code\n
-  // ${codeBlock.replace('html preview', 'htm').replace('html', 'htm')}`;
-  //     });
+    demoComponents.push({ name: componentName, path: demoPath });
 
-  //   const withEnhancedIconsScript = enhanceIconScriptDoc(
-  //     withRenderedExamples
-  //   ).replaceAll(linksRegex, (_: string, txt: string) => txt);
+    return `<${componentName} />`;
+  });
 
-  return `${mdxLayoutImport}\n${doc.replaceAll(metaRegex, '')}`;
+  const imports = componentImports.join('\n');
+
+  const demos = await Promise.all(
+    demoComponents.map(async ({ name, path }) => ({
+      name,
+      content: await loadDoc(path.replace('.js', '.tsx')),
+    }))
+  );
+
+  return {
+    dsdDoc: `${mdxImport}${imports}${mdxLayoutImport}\n${withDemos}`,
+    demos,
+  };
 };
 
 // /src/[name].ts
 const getComponentTsContent = (doc: Doc): string => {
   const name = upperFirst(camelCase(doc.dsd));
-  return `export { ${name} } from '@mui/material/${name}';`;
+  return `export { default as ${name} } from '@mui/material/${name}';`;
 };
 
 // /src/index.ts
 const getIndexTsContent = (name: string = ''): string =>
   `export * from './${name}';`;
 
-// // /index.ts
+// /index.ts
 export const getIndexJsContent = (): string => `export * from './src/index';`;
 
 export const enhance = async (docsMap: Doc[]): Promise<Doc[]> => {
-  return docsMap.map((doc: Doc) => ({
-    dsdDoc: enhanceDoc(doc.muiDoc),
-    ts: getComponentTsContent(doc),
-    index: getIndexTsContent(doc.dsd),
-    rootIndex: getIndexJsContent(),
-    ...doc,
-  }));
+  return Promise.all(
+    docsMap.map(async (doc: Doc) => ({
+      ...(await enhanceDoc(doc)),
+      ts: getComponentTsContent(doc),
+      index: getIndexTsContent(doc.dsd),
+      rootIndex: getIndexJsContent(),
+      ...doc,
+    }))
+  );
 };
