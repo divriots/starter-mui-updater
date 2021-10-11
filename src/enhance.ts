@@ -36,6 +36,8 @@ const enhanceDoc = async (doc: Doc) => {
     return `<${componentName} />`;
   });
 
+  const withClassName = withDemos.replaceAll('class=', 'className=');
+
   const imports = componentImports.join('\n');
 
   const demos = await Promise.all(
@@ -46,7 +48,7 @@ const enhanceDoc = async (doc: Doc) => {
   );
 
   return {
-    dsdDoc: `${mdxImport}${imports}${mdxLayoutImport}\n${withDemos}`,
+    dsdDoc: `${mdxImport}${imports}${mdxLayoutImport}\n${withClassName}`,
     demos,
   };
 };
