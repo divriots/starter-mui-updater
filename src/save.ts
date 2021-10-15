@@ -3,7 +3,7 @@ import 'regenerator-runtime/runtime';
 import { promises as fs } from 'fs';
 import { Doc } from './types';
 import path from 'path';
-import { uniq } from 'lodash';
+import { last, groupBy, mapValues } from 'lodash';
 
 export const basePath = '../starter-mui/';
 
@@ -59,15 +59,18 @@ const updateStudioConfig = async (docsMap: Doc[]) => {
     (await fs.readFile(studioConfigPath)).toString()
   );
 
-  const newMenu = studioConfig.packages.menu.map((menuEntry: any) => {
-    if (!Array.isArray(menuEntry)) return menuEntry;
+  const [introduction, tokens] = studioConfig.packages.menu;
+  const dockit = last(studioConfig.packages.menu);
 
-    const [category, items] = menuEntry;
-
-    return category === 'components'
-      ? [category, uniq([...items, ...docsMap.map((doc) => doc.dsd)])]
-      : [category, items];
-  });
+  const newMenu = [
+    introduction,
+    tokens,
+    ...Object.entries(groupBy(docsMap, (d) => d.category)).map(([k, ds]) => [
+      k,
+      ds.map((d) => d.dsd),
+    ]),
+    dockit,
+  ];
 
   await fs.writeFile(
     studioConfigPath,

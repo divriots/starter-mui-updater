@@ -9,10 +9,17 @@ const basePath =
 
 export const loadDoc = async (path?: string): Promise<string> => {
   try {
-    const response = await fetch(join(basePath, path || ''));
-    return await response.text();
-  } catch (error) {
-    console.log('error loading doc for path', {
+    const completePath = join(basePath, path || '');
+    const response = await fetch(completePath);
+    if (response.ok) return await response.text();
+    else {
+      console.log(
+        `fetch for ${completePath} failed with: ${await response.text()}`
+      );
+      return '';
+    }
+  } catch (error: any) {
+    console.error('error loading doc for path', {
       path,
       error: error.response.body,
     });

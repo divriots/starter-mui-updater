@@ -5,17 +5,30 @@ import { Doc } from './types';
 import pth from 'path';
 import { loadDoc } from './load';
 
-const mdxImport = `
+const staticImports = `
 import { mdx } from '@mdx-js/react';
-`;
-const mdxLayoutImport = `
+import { Playground as BklPlayground } from '@divriots/dockit-react/playground';
 import { MdxLayout } from '~/layout';
 export default MdxLayout;
 `;
 
+const playgroundTemplate = `<BklPlayground
+scope={{ $scope }}
+code={\`
+$code
+\`}
+/>`;
+
 const metaRegex = /^---\n(.+?)---/gms;
 const componentsHeaderRegex = /^\{\{"component":(.+?)\}\}/gms;
 const demoPathRegex = /^\{\{"demo": "(.+?)"(.*?)\}\}/gms;
+const materialDefaultImportRegex =
+  // /^import ([^;]+?) from '@mui\/(material|core)\/((?!styled).+?)';/gms;
+  /^import ([^;]+?) from '@mui\/(material|core)\/((?!(styled|colors)).+?)';/gms;
+const curlyBracesRegex = /\{|\}/gms;
+
+const getMainComponent = (doc: Doc) =>
+  doc.componentName || upperFirst(camelCase(doc.dsd));
 
 const enhanceDoc = async (doc: Doc) => {
   const noComponentHeader = (doc?.muiDoc || '').replaceAll(
@@ -33,30 +46,68 @@ const enhanceDoc = async (doc: Doc) => {
 
     demoComponents.push({ name: componentName, path: demoPath });
 
-    return `<${componentName} />`;
+    return `$${componentName}`;
   });
 
-  const withClassName = withDemos.replaceAll('class=', 'className=');
+  const getSample = async (name: string, path: string) => {
+    const sample = await loadDoc(path.replace('.js', '.tsx.preview'));
 
-  const imports = componentImports.join('\n');
+    // if (sample)
+    //   return playgroundTemplate
+    //     .replace('$scope', `${mainComponent}, ${name}`)
+    //     .replace('$code', sample);
+
+    const codeSample = sample || `<${name} />`;
+
+    return `<${name} />
+    
+    \`\`\`tsx
+    ${codeSample}
+    \`\`\`
+    `;
+  };
+
+  const getDemoContent = async (path: string) =>
+    (await loadDoc(path.replace('.js', '.tsx'))).replaceAll(
+      materialDefaultImportRegex,
+      (_, component: string, lib: string) =>
+        `import { ${component.replaceAll(
+          curlyBracesRegex,
+          ''
+        )} } from '@mui/${lib}';`
+    );
 
   const demos = await Promise.all(
     demoComponents.map(async ({ name, path }) => ({
       name,
-      content: await loadDoc(path.replace('.js', '.tsx')),
+      content: await getDemoContent(path),
+      sample: await getSample(name, path),
     }))
   );
 
+  const withDemoSamples = demos.reduce(
+    (acc, demo) => acc.replace(`$${demo.name}`, demo.sample),
+    withDemos
+  );
+
+  const withClassName = withDemoSamples.replaceAll('class=', 'className=');
+
+  const imports = componentImports.join('\n');
+
+  const mainComponentImport = `import { ${getMainComponent(doc)} } from '~/${
+    doc.dsd
+  }'`;
+
   return {
-    dsdDoc: `${mdxImport}${imports}${mdxLayoutImport}\n${withClassName}`,
+    dsdDoc: `${mainComponentImport}\n${imports}${staticImports}\n${withClassName}`,
     demos,
   };
 };
 
 // /src/[name].ts
 const getComponentTsContent = (doc: Doc): string => {
-  const name = upperFirst(camelCase(doc.dsd));
-  return `export { default as ${name} } from '@mui/material/${name}';`;
+  const name = getMainComponent(doc);
+  return `export { ${name} } from '@mui/material';`;
 };
 
 // /src/index.ts

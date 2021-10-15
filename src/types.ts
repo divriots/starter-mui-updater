@@ -1,6 +1,8 @@
 export type Doc = {
   dsd: string;
+  componentName?: string;
   dsdDoc?: string;
+  category: string;
 
   muiPath: string;
   muiDoc?: string;
