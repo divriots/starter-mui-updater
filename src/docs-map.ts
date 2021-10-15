@@ -1,0 +1,115 @@
+import { Doc } from './types';
+
+const map: Doc[] = [
+  {
+    dsd: 'autocomplete',
+    muiPath: '/pages/components/autocomplete/autocomplete.md',
+    category: 'inputs',
+  },
+  {
+    dsd: 'button',
+    muiPath: 'pages/components/buttons/buttons.md',
+    category: 'inputs',
+  },
+  {
+    dsd: 'button-group',
+    muiPath: 'pages/components/button-group/button-group.md',
+    category: 'inputs',
+  },
+  {
+    dsd: 'checkbox',
+    muiPath: 'pages/components/checkboxes/checkboxes.md',
+    category: 'inputs',
+  },
+  {
+    dsd: 'floating-action-button',
+    componentName: 'Fab',
+    muiPath:
+      'pages/components/floating-action-button/floating-action-button.md',
+    category: 'inputs',
+  },
+
+  {
+    dsd: 'radio-button',
+    componentName: 'Radio',
+    muiPath: 'pages/components/radio-buttons/radio-buttons.md',
+    category: 'inputs',
+  },
+  {
+    dsd: 'rating',
+    muiPath: 'pages/components/rating/rating.md',
+    category: 'inputs',
+  },
+  {
+    dsd: 'rating',
+    muiPath: 'pages/components/rating/rating.md',
+    category: 'inputs',
+  },
+  {
+    dsd: 'select',
+    muiPath: 'pages/components/selects/selects.md',
+    category: 'inputs',
+  },
+  {
+    dsd: 'slider',
+    muiPath: 'pages/components/slider/slider.md',
+    category: 'inputs',
+  },
+];
+
+export default map;
+
+const a = (52)[
+  ('@mdx-js/react',
+  '@mui/material',
+  '@divriots/dockit-react/playground',
+  'react',
+  '@divriots/dockit-react/mdx-layout-css',
+  'react-swipeable-views',
+  '@mui/material/styles',
+  '@mui/icons-material/Add',
+  '@mui/icons-material/Navigation',
+  '@divriots/dockit-react/caption',
+  '@mui/icons-material/Edit',
+  '@mui/icons-material/ArrowDropDown',
+  '@mui/icons-material/Favorite',
+  '@mui/material/RadioGroup',
+  '@mui/icons-material/KeyboardArrowUp',
+  '@mui/icons-material/Star',
+  '@mui/icons-material/SentimentVeryDissatisfied',
+  '@mui/material/colors',
+  '@mui/icons-material/FavoriteBorder',
+  '@mui/icons-material/SentimentDissatisfied',
+  '@mui/icons-material/SentimentSatisfied',
+  '@mui/icons-material/SentimentSatisfiedAltOutlined',
+  '@mui/icons-material/SentimentVerySatisfied',
+  '@mui/icons-material/BookmarkBorder',
+  '@mui/icons-material/Bookmark',
+  '@mui/core/ButtonUnstyled',
+  '@mui/core/AutocompleteUnstyled',
+  '@mui/lab/LoadingButton',
+  '@mui/core',
+  'clsx',
+  '@mui/material/useAutocomplete',
+  '@mui/icons-material/PhotoCamera',
+  '@mui/icons-material/Delete',
+  '@mui/icons-material/Fingerprint',
+  '@mui/icons-material/Save',
+  '@mui/system',
+  '@mui/material/Autocomplete',
+  '@mui/icons-material/Send',
+  '@mui/icons-material/Alarm',
+  'match-sorter',
+  '@mui/icons-material/AddShoppingCart',
+  '@mui/icons-material/Check',
+  '@mui/icons-material/LocationOn',
+  '@mui/icons-material/CheckBoxOutlineBlank',
+  '@mui/icons-material/Settings',
+  'autosuggest-highlight/parse',
+  'react-window',
+  '@mui/icons-material/Close',
+  '@mui/icons-material/CheckBox',
+  'autosuggest-highlight/match',
+  'lodash/throttle',
+  '@mui/icons-material/Done')
+];
