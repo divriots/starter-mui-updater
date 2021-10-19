@@ -55,6 +55,87 @@ const map: Doc[] = [
     muiPath: 'pages/components/slider/slider.md',
     category: 'inputs',
   },
+  {
+    dsd: 'switch',
+    muiPath: 'pages/components/switches/switches.md',
+    category: 'inputs',
+  },
+  {
+    dsd: 'text-field',
+    muiPath: 'pages/components/text-fields/text-fields.md',
+    category: 'inputs',
+  },
+  {
+    dsd: 'text-field',
+    muiPath: 'pages/components/text-fields/text-fields.md',
+    category: 'inputs',
+  },
+  {
+    dsd: 'toggle-button',
+    muiPath: 'pages/components/toggle-button/toggle-button.md',
+    category: 'inputs',
+  },
+  {
+    dsd: 'avatar',
+    muiPath: 'pages/components/avatars/avatars.md',
+    category: 'data-display',
+  },
+  {
+    dsd: 'badge',
+    muiPath: 'pages/components/badges/badges.md',
+    category: 'data-display',
+  },
+  {
+    dsd: 'chip',
+    muiPath: 'pages/components/chips/chips.md',
+    category: 'data-display',
+  },
+  {
+    dsd: 'divider',
+    muiPath: 'pages/components/dividers/dividers.md',
+    category: 'data-display',
+  },
+  {
+    dsd: 'list',
+    muiPath: 'pages/components/lists/lists.md',
+    category: 'data-display',
+  },
+  {
+    dsd: 'table',
+    muiPath: 'pages/components/tables/tables.md',
+    category: 'data-display',
+  },
+  {
+    dsd: 'tooltip',
+    muiPath: 'pages/components/tooltips/tooltips.md',
+    category: 'data-display',
+  },
+  {
+    dsd: 'typography',
+    muiPath: 'pages/components/typography/typography.md',
+    category: 'data-display',
+  },
+  {
+    dsd: 'alert',
+    muiPath: 'pages/components/alert/alert.md',
+    category: 'feedback',
+  },
+  {
+    dsd: 'backdrop',
+    muiPath: 'pages/components/backdrop/backdrop.md',
+    category: 'feedback',
+  },
+  {
+    dsd: 'dialog',
+    muiPath: 'pages/components/dialogs/dialogs.md',
+    category: 'feedback',
+  },
+  {
+    dsd: 'progress',
+    componentName: 'CircularProgress',
+    muiPath: 'pages/components/progress/progress.md',
+    category: 'feedback',
+  },
 ];
 
 export default map;

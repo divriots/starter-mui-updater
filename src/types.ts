@@ -10,5 +10,5 @@ export type Doc = {
   ts?: string; // src/[name].ts
   index?: string; // src/index.ts
   rootIndex?: string; // /index.ts
-  demos?: { name: string; content: string }[];
+  demos?: { name: string; content: string; type: 'jsx' | 'tsx' }[];
 };

@@ -40,8 +40,8 @@ const saveDoc = async (doc: Doc): Promise<boolean> => {
     );
 
     await Promise.all(
-      (doc.demos || []).map(({ name, content }) =>
-        fs.writeFile(path.join(docPath, `${name}.tsx`), content)
+      (doc.demos || []).map(({ name, content, type }) =>
+        fs.writeFile(path.join(docPath, `${name}.${type}`), content)
       )
     );
 
@@ -65,9 +65,9 @@ const updateStudioConfig = async (docsMap: Doc[]) => {
   const newMenu = [
     introduction,
     tokens,
-    ...Object.entries(groupBy(docsMap, (d) => d.category)).map(([k, ds]) => [
+    ...Object.entries(groupBy(docsMap, d => d.category)).map(([k, ds]) => [
       k,
-      ds.map((d) => d.dsd),
+      ds.map(d => d.dsd),
     ]),
     dockit,
   ];
