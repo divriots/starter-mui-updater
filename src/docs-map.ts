@@ -23,7 +23,7 @@ const map: Doc[] = [
   },
   {
     dsd: 'floating-action-button',
-    componentName: 'Fab',
+    componentNames: ['Fab'],
     muiPath:
       'pages/components/floating-action-button/floating-action-button.md',
     category: 'inputs',
@@ -31,7 +31,7 @@ const map: Doc[] = [
 
   {
     dsd: 'radio-button',
-    componentName: 'Radio',
+    componentNames: ['Radio'],
     muiPath: 'pages/components/radio-buttons/radio-buttons.md',
     category: 'inputs',
   },
@@ -132,9 +132,60 @@ const map: Doc[] = [
   },
   {
     dsd: 'progress',
-    componentName: 'CircularProgress',
+    componentNames: ['CircularProgress', 'LinearProgress'],
     muiPath: 'pages/components/progress/progress.md',
     category: 'feedback',
+  },
+  {
+    dsd: 'skeleton',
+    muiPath: 'pages/components/skeleton/skeleton.md',
+    category: 'feedback',
+  },
+  {
+    dsd: 'accordion',
+    muiPath: 'pages/components/accordion/accordion.md',
+    category: 'surfaces',
+  },
+  {
+    dsd: 'app-bar',
+    muiPath: 'pages/components/app-bar/app-bar.md',
+    category: 'surfaces',
+  },
+  {
+    dsd: 'card',
+    muiPath: 'pages/components/cards/cards.md',
+    category: 'surfaces',
+  },
+  {
+    dsd: 'paper',
+    muiPath: 'pages/components/paper/paper.md',
+    category: 'surfaces',
+  },
+  {
+    dsd: 'bottom-navigation',
+    muiPath: 'pages/components/bottom-navigation/bottom-navigation.md',
+    category: 'navigation',
+  },
+  {
+    dsd: 'breadcrumbs',
+    muiPath: 'pages/components/breadcrumbs/breadcrumbs.md',
+    category: 'navigation',
+  },
+  {
+    dsd: 'drawer',
+    muiPath: 'pages/components/drawers/drawers.md',
+    category: 'navigation',
+  },
+  {
+    dsd: 'link',
+    muiPath: 'pages/components/links/links.md',
+    category: 'navigation',
+  },
+  {
+    dsd: 'menu',
+    componentNames: ['Menu', 'MenuItem', 'MenuList'],
+    muiPath: 'pages/components/menus/menus.md',
+    category: 'navigation',
   },
 ];
 

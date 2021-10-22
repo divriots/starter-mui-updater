@@ -1,6 +1,6 @@
 export type Doc = {
   dsd: string;
-  componentName?: string;
+  componentNames?: string[];
   dsdDoc?: string;
   category: string;
 

@@ -6,17 +6,18 @@ import pth from 'path';
 import { loadDoc } from './load';
 import docMap from './docs-map';
 
-const getMainComponent = (doc: Doc) =>
-  doc.componentName || upperFirst(camelCase(doc.dsd));
+const getMainComponents = (doc: Doc) =>
+  doc.componentNames || [upperFirst(camelCase(doc.dsd))];
 
-const dsComponents: (Doc & { componentName: string })[] = docMap.map(d => ({
-  componentName: getMainComponent(d),
+const dsComponents: (Doc & { componentNames: string[] })[] = docMap.map(d => ({
+  componentNames: getMainComponents(d),
   ...d,
 }));
 
 const staticImports = `
 import { mdx } from '@mdx-js/react';
 import { Playground as BklPlayground } from '@divriots/dockit-react/playground';
+import { DemoFrame } from '~/demo-frame';
 import { MdxLayout } from '~/layout';
 export default MdxLayout;
 `;
@@ -55,18 +56,24 @@ const enhanceDoc = async (doc: Doc) => {
   );
 
   const componentImports: string[] = [];
-  const demoComponents: { name: string; path: string }[] = [];
+  const demoComponents: { name: string; path: string; otherInfo: string }[] =
+    [];
 
-  const withDemos = noLinkTag.replaceAll(demoPathRegex, (_, demoPath) => {
-    const componentName = pth.basename(demoPath, '.js');
-    componentImports.push(`import ${componentName} from './${componentName}';`);
+  const withDemos = noLinkTag.replaceAll(
+    demoPathRegex,
+    (_, demoPath, otherInfo) => {
+      const componentName = pth.basename(demoPath, '.js');
+      componentImports.push(
+        `import ${componentName} from './${componentName}';`
+      );
 
-    demoComponents.push({ name: componentName, path: demoPath });
+      demoComponents.push({ name: componentName, path: demoPath, otherInfo });
 
-    return `$${componentName}`;
-  });
+      return `$${componentName}`;
+    }
+  );
 
-  const getSample = async (name: string, path: string) => {
+  const getSample = async (name: string, path: string, otherInfo: string) => {
     const sample = await loadDoc(path.replace('.js', '.tsx.preview'));
 
     // if (sample)
@@ -76,11 +83,18 @@ const enhanceDoc = async (doc: Doc) => {
 
     const codeSample = sample || `<${name} />`;
 
-    return `<${name} />
+    const demo = otherInfo.includes('"iframe": true')
+      ? `<DemoFrame>
+  <${name} />
+</DemoFrame>
+    `
+      : `<${name} />`;
+
+    return `${demo}
     
-    \`\`\`tsx
-    ${codeSample}
-    \`\`\`
+\`\`\`tsx
+${codeSample}
+\`\`\`
     `;
   };
 
@@ -100,39 +114,55 @@ const enhanceDoc = async (doc: Doc) => {
 
         const noCurly = component.replaceAll(curlyBracesRegex, '');
 
-        const names =
-          alias && alias !== componentPath
-            ? noCurly.replace(alias, `${componentPath} as ${alias}`)
-            : noCurly;
+        const aliasExists = alias && alias !== componentPath;
+        const nameAsAlias = `${componentPath} as ${alias}`;
+
+        const names = aliasExists
+          ? noCurly.replace(alias, nameAsAlias)
+          : noCurly;
 
         const wordRegex = (word: string) => new RegExp(`\\b${word}\\b`, `gm`);
-        const ds = dsComponents.find(c =>
-          wordRegex(c.componentName).test(names)
-        );
+        const ds =
+          lib === 'material' &&
+          dsComponents
+            .map(d => ({
+              ...d,
+              componentNames: d.componentNames.filter(name =>
+                wordRegex(name).test(names)
+              ),
+            }))
+            .find(d => d.componentNames.length > 0);
 
         const dsImport = !!ds
-          ? `import { ${ds.componentName} } from '~/${ds.dsd}';\n`
+          ? `import { ${ds.componentNames
+              .map(n =>
+                aliasExists && nameAsAlias.includes(n) ? nameAsAlias : n
+              )
+              .join(',')} } from '~/${ds.dsd}';`
           : '';
 
         const getMuiImport = () => {
           if (!ds) return `import { ${names} } from '@mui/${lib}';`;
 
-          const others = trim(
-            names.replace(wordRegex(ds.componentName), '').trim(),
-            ','
-          ).trim();
+          const others = ds.componentNames.reduce((acc, n) => {
+            const withoutAlias =
+              aliasExists && !!nameAsAlias ? acc.replace(nameAsAlias, '') : acc;
+            return trim(
+              withoutAlias.replace(wordRegex(n), '').trim(),
+              ','
+            ).trim();
+          }, names);
 
           return others ? `import { ${others} } from '@mui/${lib}';` : '';
         };
 
-        return `${dsImport}${getMuiImport()}`;
+        return [dsImport, getMuiImport()].filter(i => !!i).join('\n');
       }
     );
 
-    const withAbsoluteSrc = withImports.replaceAll(
-      'src="/static',
-      'src="https://mui.com/static'
-    );
+    const withAbsoluteSrc = withImports
+      .replaceAll('src="/static', 'src="https://mui.com/static')
+      .replaceAll('image="/static', 'image="https://mui.com/static');
 
     const withNoHighlightedCodeComponent = withAbsoluteSrc
       .replaceAll(highlightedCodeJsxRegex, '')
@@ -145,14 +175,19 @@ const enhanceDoc = async (doc: Doc) => {
         )
       : withNoHighlightedCodeComponent;
 
-    return { content: withParticularFixes, type: type as 'tsx' | 'jsx' };
+    const withRelativeBoxes = withParticularFixes.replace(
+      `<Box sx={{ display: 'flex' }}>`,
+      `<Box sx={{ display: 'flex', position: 'relative' }}>`
+    );
+
+    return { content: withRelativeBoxes, type: type as 'tsx' | 'jsx' };
   };
 
   const demos = await Promise.all(
-    demoComponents.map(async ({ name, path }) => ({
+    demoComponents.map(async ({ name, path, otherInfo }) => ({
       name,
       ...(await getDemoContent(path)),
-      sample: await getSample(name, path),
+      sample: await getSample(name, path, otherInfo),
     }))
   );
 
@@ -165,9 +200,9 @@ const enhanceDoc = async (doc: Doc) => {
 
   const imports = componentImports.join('\n');
 
-  const mainComponentImport = `import { ${getMainComponent(doc)} } from '~/${
-    doc.dsd
-  }'`;
+  const mainComponentImport = `import { ${getMainComponents(doc).join(
+    ','
+  )} } from '~/${doc.dsd}'`;
 
   return {
     dsdDoc: `${mainComponentImport}\n${imports}${staticImports}\n${withClassName}`,
@@ -177,8 +212,8 @@ const enhanceDoc = async (doc: Doc) => {
 
 // /src/[name].ts
 const getComponentTsContent = (doc: Doc): string => {
-  const name = getMainComponent(doc);
-  return `export { ${name} } from '@mui/material';`;
+  const names = getMainComponents(doc).join(',');
+  return `export { ${names} } from '@mui/material';`;
 };
 
 // /src/index.ts
