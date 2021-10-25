@@ -187,6 +187,79 @@ const map: Doc[] = [
     muiPath: 'pages/components/menus/menus.md',
     category: 'navigation',
   },
+  {
+    dsd: 'pagination',
+    componentNames: ['Pagination', 'PaginationItem'],
+    muiPath: 'pages/components/pagination/pagination.md',
+    category: 'navigation',
+  },
+  {
+    dsd: 'speed-dial',
+    muiPath: 'pages/components/speed-dial/speed-dial.md',
+    category: 'navigation',
+  },
+  {
+    dsd: 'stepper',
+    muiPath: 'pages/components/steppers/steppers.md',
+    category: 'navigation',
+  },
+  {
+    dsd: 'tabs',
+    muiPath: 'pages/components/tabs/tabs.md',
+    category: 'navigation',
+  },
+  {
+    dsd: 'box',
+    muiPath: 'pages/components/box/box.md',
+    category: 'layout',
+  },
+  {
+    dsd: 'container',
+    muiPath: 'pages/components/container/container.md',
+    category: 'layout',
+  },
+  {
+    dsd: 'container',
+    muiPath: 'pages/components/container/container.md',
+    category: 'layout',
+  },
+  {
+    dsd: 'grid',
+    muiPath: 'pages/components/grid/grid.md',
+    category: 'layout',
+  },
+  {
+    dsd: 'stack',
+    muiPath: 'pages/components/stack/stack.md',
+    category: 'layout',
+  },
+  {
+    dsd: 'image-list',
+    componentNames: ['ImageList', 'ImageListItem', 'ImageListItemBar'],
+    muiPath: 'pages/components/image-list/image-list.md',
+    category: 'layout',
+  },
+  // {
+  //   dsd: 'date-picker',
+  //   muiPath: 'pages/components/date-picker/date-picker.md',
+  //   category: 'date / time',
+  // },
+  // {
+  //   dsd: 'date-time-picker',
+  //   componentNames: [
+  //     'DateTimePicker',
+  //     'DesktopDateTimePicker',
+  //     'MobileDateTimePicker',
+  //     'StaticDateTimePicker',
+  //   ],
+  //   muiPath: 'pages/components/date-time-picker/date-time-picker.md',
+  //   category: 'date / time',
+  // },
+  // {
+  //   dsd: 'time-picker',
+  //   muiPath: 'pages/components/time-picker/time-picker.md',
+  //   category: 'date / time',
+  // },
 ];
 
 export default map;

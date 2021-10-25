@@ -37,6 +37,7 @@ const mdLinksRegex = /\[(.+?)\]\((.+?)\)/gm;
 const linkTagRegex = /\((.+?)\<(http.*?)\/\>\)/gm;
 const highlightedCodeJsxRegex = /<HighlightedCode(.+?)\/>/gms;
 const highlightedCodeImport = `import HighlightedCode from 'docs/src/modules/components/HighlightedCode';`;
+const mbTableLineRegex = /^\|.*?$/gm;
 
 const materialDefaultImportRegex =
   /^import ([^;]+?) from '@mui\/(material|core|icons-material)\/((?!colors).+?)';/gms;
@@ -168,19 +169,14 @@ ${codeSample}
       .replaceAll(highlightedCodeJsxRegex, '')
       .replaceAll(highlightedCodeImport, '');
 
-    const withParticularFixes = path.includes('MusicPlayerSlider')
+    const withMusicSliderFixes = path.includes('MusicPlayerSlider')
       ? withNoHighlightedCodeComponent.replace(
           `<Box sx={{ width: '100%', overflow: 'hidden' }}>`,
           `<Box sx={{ width: '100%', overflow: 'hidden', position: 'relative', padding: '1rem' }}>`
         )
       : withNoHighlightedCodeComponent;
 
-    const withRelativeBoxes = withParticularFixes.replace(
-      `<Box sx={{ display: 'flex' }}>`,
-      `<Box sx={{ display: 'flex', position: 'relative' }}>`
-    );
-
-    return { content: withRelativeBoxes, type: type as 'tsx' | 'jsx' };
+    return { content: withMusicSliderFixes, type: type as 'tsx' | 'jsx' };
   };
 
   const demos = await Promise.all(
@@ -198,6 +194,11 @@ ${codeSample}
 
   const withClassName = withDemoSamples.replaceAll('class=', 'className=');
 
+  const withNoPropsTableForBox =
+    doc.dsd === 'box'
+      ? withClassName.replaceAll(mbTableLineRegex, '')
+      : withClassName;
+
   const imports = componentImports.join('\n');
 
   const mainComponentImport = `import { ${getMainComponents(doc).join(
@@ -205,7 +206,7 @@ ${codeSample}
   )} } from '~/${doc.dsd}'`;
 
   return {
-    dsdDoc: `${mainComponentImport}\n${imports}${staticImports}\n${withClassName}`,
+    dsdDoc: `${mainComponentImport}\n${imports}${staticImports}\n${withNoPropsTableForBox}`,
     demos,
   };
 };
