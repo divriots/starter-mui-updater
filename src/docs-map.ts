@@ -239,27 +239,27 @@ const map: Doc[] = [
     muiPath: 'pages/components/image-list/image-list.md',
     category: 'layout',
   },
-  // {
-  //   dsd: 'date-picker',
-  //   muiPath: 'pages/components/date-picker/date-picker.md',
-  //   category: 'date / time',
-  // },
-  // {
-  //   dsd: 'date-time-picker',
-  //   componentNames: [
-  //     'DateTimePicker',
-  //     'DesktopDateTimePicker',
-  //     'MobileDateTimePicker',
-  //     'StaticDateTimePicker',
-  //   ],
-  //   muiPath: 'pages/components/date-time-picker/date-time-picker.md',
-  //   category: 'date / time',
-  // },
-  // {
-  //   dsd: 'time-picker',
-  //   muiPath: 'pages/components/time-picker/time-picker.md',
-  //   category: 'date / time',
-  // },
+  {
+    dsd: 'date-picker',
+    muiPath: 'pages/components/date-picker/date-picker.md',
+    category: 'date / time',
+  },
+  {
+    dsd: 'date-time-picker',
+    componentNames: [
+      'DateTimePicker',
+      'DesktopDateTimePicker',
+      'MobileDateTimePicker',
+      'StaticDateTimePicker',
+    ],
+    muiPath: 'pages/components/date-time-picker/date-time-picker.md',
+    category: 'date / time',
+  },
+  {
+    dsd: 'time-picker',
+    muiPath: 'pages/components/time-picker/time-picker.md',
+    category: 'date / time',
+  },
 ];
 
 export default map;

@@ -40,7 +40,8 @@ const highlightedCodeImport = `import HighlightedCode from 'docs/src/modules/com
 const mbTableLineRegex = /^\|.*?$/gm;
 
 const materialDefaultImportRegex =
-  /^import ([^;]+?) from '@mui\/(material|core|icons-material)\/((?!colors).+?)';/gms;
+  // /^import ([^;]+?) from '@mui\/(material|core|icons-material|lab)\/((?!colors).+?)';/gms;
+  /^import ([^;]+?) from '@mui\/(material|core|icons-material|lab)\/((?!(colors|adapter)).+?)';/gims;
 const curlyBracesRegex = /\{|\}/gms;
 
 const enhanceDoc = async (doc: Doc) => {
@@ -99,6 +100,8 @@ ${codeSample}
     `;
   };
 
+  let componentLib = 'material';
+
   const getDemoContent = async (
     path: string
   ): Promise<{ content: string; type: 'jsx' | 'tsx' }> => {
@@ -124,7 +127,7 @@ ${codeSample}
 
         const wordRegex = (word: string) => new RegExp(`\\b${word}\\b`, `gm`);
         const ds =
-          lib === 'material' &&
+          ['material', 'lab'].includes(lib) &&
           dsComponents
             .map(d => ({
               ...d,
@@ -141,6 +144,12 @@ ${codeSample}
               )
               .join(',')} } from '~/${ds.dsd}';`
           : '';
+
+        const isMainComponentImport = getMainComponents(doc).some(name =>
+          wordRegex(name).test(names)
+        );
+
+        if (isMainComponentImport) componentLib = lib;
 
         const getMuiImport = () => {
           if (!ds) return `import { ${names} } from '@mui/${lib}';`;
@@ -201,20 +210,17 @@ ${codeSample}
 
   const imports = componentImports.join('\n');
 
-  const mainComponentImport = `import { ${getMainComponents(doc).join(
-    ','
-  )} } from '~/${doc.dsd}'`;
+  const names = getMainComponents(doc).join(',');
+  const mainComponentImport = `import { ${names} } from '~/${doc.dsd}'`;
+
+  // for /src/[name].ts
+  const mainTsFileContent = `export { ${names} } from '@mui/${componentLib}';`;
 
   return {
     dsdDoc: `${mainComponentImport}\n${imports}${staticImports}\n${withNoPropsTableForBox}`,
     demos,
+    ts: mainTsFileContent,
   };
-};
-
-// /src/[name].ts
-const getComponentTsContent = (doc: Doc): string => {
-  const names = getMainComponents(doc).join(',');
-  return `export { ${names} } from '@mui/material';`;
 };
 
 // /src/index.ts
@@ -228,7 +234,6 @@ export const enhance = async (docsMap: Doc[]): Promise<Doc[]> => {
   return Promise.all(
     docsMap.map(async (doc: Doc) => ({
       ...(await enhanceDoc(doc)),
-      ts: getComponentTsContent(doc),
       index: getIndexTsContent(doc.dsd),
       rootIndex: getIndexJsContent(),
       ...doc,
