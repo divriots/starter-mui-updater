@@ -11,6 +11,7 @@ const rootIndex = { fileName: 'index.ts', dir: '' };
 const index = { fileName: 'index.ts', dir: '/src' };
 const component = { fileName: '${name}.ts', dir: '/src' };
 const documentation = { fileName: 'doc.mdx', dir: '/doc' };
+const stories = { dir: '/stories' };
 
 const saveDoc = async (doc: Doc): Promise<boolean> => {
   try {
@@ -39,9 +40,12 @@ const saveDoc = async (doc: Doc): Promise<boolean> => {
       doc.dsdDoc || ''
     );
 
+    const storiesPath = path.join(basePath, doc.dsd, stories.dir);
+    await fs.mkdir(storiesPath, { recursive: true });
+
     await Promise.all(
       (doc.demos || []).map(({ name, content, type }) =>
-        fs.writeFile(path.join(docPath, `${name}.${type}`), content)
+        fs.writeFile(path.join(storiesPath, `${name}.stories.${type}`), content)
       )
     );
 

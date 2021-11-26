@@ -22,13 +22,6 @@ import { MdxLayout } from '~/layout';
 export default MdxLayout;
 `;
 
-const playgroundTemplate = `<BklPlayground
-scope={{ $scope }}
-code={\`
-$code
-\`}
-/>`;
-
 const metaRegex = /^---\n(.+?)---/gms;
 const commentsRegex = /^<!--(.*?)-->/gms;
 const componentsHeaderRegex = /^\{\{"component":(.+?)\}\}/gms;
@@ -38,9 +31,9 @@ const linkTagRegex = /\((.+?)\<(http.*?)\/\>\)/gm;
 const highlightedCodeJsxRegex = /<HighlightedCode(.+?)\/>/gms;
 const highlightedCodeImport = `import HighlightedCode from 'docs/src/modules/components/HighlightedCode';`;
 const mbTableLineRegex = /^\|.*?$/gm;
-
+const exportDefaultFunctionRegex = /export default function (.*?)\(/gm;
+const exportDefaultComponentRegex = /export default (.*?)\;/gm;
 const materialDefaultImportRegex =
-  // /^import ([^;]+?) from '@mui\/(material|core|icons-material|lab)\/((?!colors).+?)';/gms;
   /^import ([^;]+?) from '@mui\/(material|core|icons-material|lab)\/((?!(colors|adapter)).+?)';/gims;
 const curlyBracesRegex = /\{|\}/gms;
 
@@ -57,7 +50,6 @@ const enhanceDoc = async (doc: Doc) => {
     (_, name, link) => `${name} ${link}`
   );
 
-  const componentImports: string[] = [];
   const demoComponents: { name: string; path: string; otherInfo: string }[] =
     [];
 
@@ -65,9 +57,6 @@ const enhanceDoc = async (doc: Doc) => {
     demoPathRegex,
     (_, demoPath, otherInfo) => {
       const componentName = pth.basename(demoPath, '.js');
-      componentImports.push(
-        `import ${componentName} from './${componentName}';`
-      );
 
       demoComponents.push({ name: componentName, path: demoPath, otherInfo });
 
@@ -77,11 +66,6 @@ const enhanceDoc = async (doc: Doc) => {
 
   const getSample = async (name: string, path: string, otherInfo: string) => {
     const sample = await loadDoc(path.replace('.js', '.tsx.preview'));
-
-    // if (sample)
-    //   return playgroundTemplate
-    //     .replace('$scope', `${mainComponent}, ${name}`)
-    //     .replace('$code', sample);
 
     const codeSample = sample || `<${name} />`;
 
@@ -104,7 +88,11 @@ ${codeSample}
 
   const getDemoContent = async (
     path: string
-  ): Promise<{ content: string; type: 'jsx' | 'tsx' }> => {
+  ): Promise<{
+    exportedComponent: string;
+    content: string;
+    type: 'jsx' | 'tsx';
+  }> => {
     const retrievedContent = await loadDoc(path.replace('.js', '.tsx'));
 
     const { content, type } = retrievedContent
@@ -170,7 +158,28 @@ ${codeSample}
       }
     );
 
-    const withAbsoluteSrc = withImports
+    let exportedComponent = '';
+
+    const withNoDefaultExport = withImports
+      .replaceAll(exportDefaultFunctionRegex, (_, component) => {
+        exportedComponent = component;
+        return `function ${exportedComponent}_(`;
+      })
+      .replaceAll(exportDefaultComponentRegex, (_, component) => {
+        exportedComponent = component;
+        return '';
+      })
+      .replaceAll(
+        new RegExp(`\\b${exportedComponent}\\b`, 'gm'),
+        comp => `${comp}_`
+      );
+
+    const withExport = !!exportedComponent
+      ? `${withNoDefaultExport}
+    export const ${exportedComponent} = () => <${exportedComponent}_ />;`
+      : withNoDefaultExport;
+
+    const withAbsoluteSrc = withExport
       .replaceAll('src="/static', 'src="https://mui.com/static')
       .replaceAll('image="/static', 'image="https://mui.com/static');
 
@@ -185,15 +194,24 @@ ${codeSample}
         )
       : withNoHighlightedCodeComponent;
 
-    return { content: withMusicSliderFixes, type: type as 'tsx' | 'jsx' };
+    return {
+      exportedComponent,
+      content: withMusicSliderFixes,
+      type: type as 'tsx' | 'jsx',
+    };
   };
 
   const demos = await Promise.all(
-    demoComponents.map(async ({ name, path, otherInfo }) => ({
-      name,
-      ...(await getDemoContent(path)),
-      sample: await getSample(name, path, otherInfo),
-    }))
+    demoComponents.map(async ({ name, path, otherInfo }) => {
+      const { exportedComponent, content, type } = await getDemoContent(path);
+      return {
+        name,
+        content,
+        type,
+        sample: await getSample(name, path, otherInfo),
+        import: `import { ${exportedComponent} as ${name} } from '../stories/${name}.stories';`,
+      };
+    })
   );
 
   const withDemoSamples = demos.reduce(
@@ -208,7 +226,7 @@ ${codeSample}
       ? withClassName.replaceAll(mbTableLineRegex, '')
       : withClassName;
 
-  const imports = componentImports.join('\n');
+  const imports = demos.map(d => d.import).join('\n');
 
   const names = getMainComponents(doc).join(',');
   const mainComponentImport = `import { ${names} } from '~/${doc.dsd}'`;
